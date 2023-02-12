@@ -1,17 +1,35 @@
-import { Text, View, Button, StyleSheet, TextInput } from "react-native";
+import { Text, View, Button, StyleSheet, TextInput, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { StackParams } from "../../navigation";
 import { Formik } from "formik";
 import * as Yup from 'yup';
+import { getAuth, updateEmail, updatePassword } from '@firebase/auth';
 
 export default function HomeScreen() {
 
     const navigation = useNavigation<StackNavigationProp<StackParams, "home">>();
+    const auth = getAuth();
 
     //Atualização de dados cadastrais. 
     const handleAtualizacaoCadastral = async({email, senha, nome, idade}:any) => {
 
+        try {
+            if (auth.currentUser) {
+                //Atualiza o email
+                if(auth.currentUser?.email != email) 
+                    await updateEmail(auth.currentUser, email);
+                
+                //Atualiza a senha
+                if (senha != '')
+                    await updatePassword(auth.currentUser, senha)
+            }
+
+            Alert.alert('Sucesso', 'Dados atualizados');
+        } catch(erro) {
+            Alert.alert('Erro', 'Não foi possivel completar a operação. Motivo: ' + erro);
+
+        }
     }
 
     return (
@@ -25,7 +43,7 @@ export default function HomeScreen() {
                     email: Yup.string().required('O campo email precisa existir').email('O campo precisa ser um email'),
                     nome: Yup.string().required('O campo nome precisa existir'),
                     idade: Yup.number().required('O campo idade precisa ser informado').positive('O valor precisa ser um número positivo'),
-                    senha: Yup.string().required('O campo senha precisa existir').min(6, 'O campo senha precisa ter no mínimo 6 caracteres')
+                    senha: Yup.string().min(6, 'O campo senha precisa ter no mínimo 6 caracteres')
                 })}
             >
                 {({handleChange, errors, touched, handleBlur, isSubmitting, handleSubmit}) => (
@@ -54,6 +72,7 @@ export default function HomeScreen() {
                         <Button title="Cadastrar" onPress={() => handleSubmit()} disabled={isSubmitting} />
                         
                         <Button title="Sair" color="tomato" onPress={() => {
+                            auth.signOut();
                             navigation.reset({index: 0, routes: [{name: 'login'}]})
                         }}/>
                     </View>

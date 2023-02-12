@@ -1,12 +1,19 @@
+import { Button, StyleSheet, Text, TextInput, View, Alert } from "react-native";
 import { Formik } from "formik";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Yup from 'yup';
+import { useNavigation } from "@react-navigation/native";
+import { getAuth, createUserWithEmailAndPassword } from '@firebase/auth';
 
 export default function CadastroScreen() {
 
+    const auth = getAuth();
+    const navigation = useNavigation();
+
     //Função do cadastro de usuário
     const handleCadastro = async({email, senha, nome, idade}:any) => {
-
+        await createUserWithEmailAndPassword(auth, email, senha)
+            .then(() => navigation.goBack())
+            .catch(erro => Alert.alert('Erro', 'Não foi possivel criar o usuário, tente novamente'))
     }
 
 

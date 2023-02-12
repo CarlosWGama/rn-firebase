@@ -4,15 +4,18 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { StackParams } from "../../navigation";
 import { Formik } from "formik";
-
+import { getAuth, signInWithEmailAndPassword } from '@firebase/auth';
 export default function LoginScreen() {
     
     const navigation = useNavigation<StackNavigationProp<StackParams, "login">>();
+    const auth = getAuth();
 
     const handleLogin = async ({email, senha}:any) => {
         
-        navigation.reset({index: 0, routes: [{name: 'home'}]}); 
-        //Alert.alert('Erro', 'Login ou senha incorreta!')
+        await signInWithEmailAndPassword(auth, email, senha)
+            .then(usuario => navigation.reset({index: 0, routes: [{name: 'home'}]}))
+            .catch(erro => Alert.alert('Erro', 'Login ou senha incorreta!')); 
+    
     }
 
     return (<View style={styles.container}>
