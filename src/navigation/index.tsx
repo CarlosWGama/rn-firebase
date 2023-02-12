@@ -19,7 +19,7 @@ export function InicialScreen() {
     const navigation = useNavigation<any>();
     const auth = getAuth();
     onAuthStateChanged(auth, (usuario) => {
-        navigation.reset({index: 0, routes:[{name: (usuario ? 'home' : 'login')}]})
+        //navigation.reset({index: 0, routes:[{name: (usuario ? 'home' : 'login')}]})
     })
 
     return (<></>);

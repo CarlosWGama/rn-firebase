@@ -3,16 +3,27 @@ import { Formik } from "formik";
 import * as Yup from 'yup';
 import { useNavigation } from "@react-navigation/native";
 import { getAuth, createUserWithEmailAndPassword } from '@firebase/auth';
+import { getFirestore, setDoc, doc } from '@firebase/firestore';
 
 export default function CadastroScreen() {
 
     const auth = getAuth();
+    const db = getFirestore();
     const navigation = useNavigation();
+
+
 
     //Função do cadastro de usuário
     const handleCadastro = async({email, senha, nome, idade}:any) => {
         await createUserWithEmailAndPassword(auth, email, senha)
-            .then(() => navigation.goBack())
+            .then((usuario) => {
+
+                setDoc(doc(db, 'usuarios', usuario.user.uid), {
+                    email, nome, idade
+                })
+
+                // navigation.goBack()
+            })
             .catch(erro => Alert.alert('Erro', 'Não foi possivel criar o usuário, tente novamente'))
     }
 

@@ -5,11 +5,28 @@ import { StackParams } from "../../navigation";
 import { Formik } from "formik";
 import * as Yup from 'yup';
 import { getAuth, updateEmail, updatePassword } from '@firebase/auth';
+import { getFirestore, updateDoc, doc, getDoc } from '@firebase/firestore';
+import { useEffect, useState } from "react";
+
+type Usuario = {
+    email: string,
+    senha: string,
+    nome: string,
+    idade: number
+}
 
 export default function HomeScreen() {
 
     const navigation = useNavigation<StackNavigationProp<StackParams, "home">>();
     const auth = getAuth();
+    const db = getFirestore();
+    const [ usuario, setUsuario ] = useState<Usuario>({email: '', senha: '', nome: '', idade: 0});
+    useEffect(() => {
+        if (auth.currentUser) {
+            getDoc(doc(db, 'usuarios', auth.currentUser.uid))
+                .then(dados => setUsuario(dados.data()))
+        }
+    }, [])
 
     //Atualização de dados cadastrais. 
     const handleAtualizacaoCadastral = async({email, senha, nome, idade}:any) => {
@@ -23,6 +40,9 @@ export default function HomeScreen() {
                 //Atualiza a senha
                 if (senha != '')
                     await updatePassword(auth.currentUser, senha)
+
+                //Atualizando dados
+                updateDoc(doc(db, 'usuarios', auth.currentUser.uid), {email, nome, idade})
             }
 
             Alert.alert('Sucesso', 'Dados atualizados');
@@ -37,7 +57,8 @@ export default function HomeScreen() {
             <Text style={styles.header}>Bem vindo! Esses são seus dados</Text>
 
             <Formik
-                initialValues={{email: '', senha: '', nome: '', idade: ''}}
+                initialValues={usuario}
+                enableReinitialize
                 onSubmit={handleAtualizacaoCadastral}
                 validationSchema={Yup.object({
                     email: Yup.string().required('O campo email precisa existir').email('O campo precisa ser um email'),
@@ -46,21 +67,21 @@ export default function HomeScreen() {
                     senha: Yup.string().min(6, 'O campo senha precisa ter no mínimo 6 caracteres')
                 })}
             >
-                {({handleChange, errors, touched, handleBlur, isSubmitting, handleSubmit}) => (
+                {({handleChange, values, errors, touched, handleBlur, isSubmitting, handleSubmit}) => (
                     <View style={{marginTop: 20}}>
                         {/* NOME */}
                         <Text>Nome: </Text>
-                        <TextInput onChangeText={handleChange('nome')} onBlur={handleBlur('nome')} style={styles.input}/>
+                        <TextInput value={values.nome} onChangeText={handleChange('nome')} onBlur={handleBlur('nome')} style={styles.input}/>
                         {touched.nome && errors.nome && <Text style={styles.erro}>{errors.nome}</Text>}
                         
                         {/* EMAIL */}
                         <Text>Email: </Text>
-                        <TextInput onChangeText={handleChange('email')} onBlur={handleBlur('email')} keyboardType="email-address" style={styles.input}/>
+                        <TextInput  value={values.email} onChangeText={handleChange('email')} onBlur={handleBlur('email')} keyboardType="email-address" style={styles.input}/>
                         {touched.email && errors.email && <Text style={styles.erro}>{errors.email}</Text>}
 
                         {/* Idade */}
                         <Text>Idade: </Text>
-                        <TextInput onChangeText={handleChange('idade')} onBlur={handleBlur('idade')} keyboardType="decimal-pad" style={styles.input}/>
+                        <TextInput  value={values.idade.toString()} onChangeText={handleChange('idade')} onBlur={handleBlur('idade')} keyboardType="decimal-pad" style={styles.input}/>
                         {touched.idade && errors.idade && <Text style={styles.erro}>{errors.idade}</Text>}
 
                         {/* Senha */}
@@ -69,11 +90,11 @@ export default function HomeScreen() {
                         {touched.senha && errors.senha && <Text style={styles.erro}>{errors.senha}</Text>}
 
                         {/* CADASTRAR */}
-                        <Button title="Cadastrar" onPress={() => handleSubmit()} disabled={isSubmitting} />
+                        <Button title="Atualizar" onPress={() => handleSubmit()} disabled={isSubmitting} />
                         
                         <Button title="Sair" color="tomato" onPress={() => {
                             auth.signOut();
-                            navigation.reset({index: 0, routes: [{name: 'login'}]})
+                            //navigation.reset({index: 0, routes: [{name: 'login'}]})
                         }}/>
                     </View>
                 )}
