@@ -2,15 +2,21 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Formik } from "formik";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Yup from 'yup';
-import { auth } from "../../config/firebase-config";
+import { auth, db } from "../../config/firebase-config";
 import { router } from "expo-router";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function CadastroScreen() {
 
     //Função do cadastro de usuário
     const handleCadastro = async({email, senha, nome, idade}:any) => {
         createUserWithEmailAndPassword(auth, email, senha)
-            .then(() => router.back())
+            .then(async (usuario) => {
+                await setDoc(doc(db, 'usuarios', usuario.user.uid), {
+                              email, nome, idade
+                })
+                router.back()      
+            } )
             .catch(erro => Alert.alert('Erro', 'Não foi possivel criar o usuário, tente novamente'))
 
     }
