@@ -2,11 +2,27 @@ import { Text, View, Button, StyleSheet, TextInput, Alert } from "react-native";
 import { Formik } from "formik";
 import * as Yup from 'yup';
 import { router } from "expo-router";
+import { updateEmail, updatePassword } from "firebase/auth";
+import { auth } from "../../config/firebase-config";
 
 export default function HomeScreen() {
 
     //Atualização de dados cadastrais. 
     const handleAtualizacaoCadastral = async({email, senha, nome, idade}:any) => {
+            try {
+                  if (auth.currentUser) {
+                    //Atualiza o email
+                    if(auth.currentUser.email != email) 
+                      await updateEmail(auth.currentUser, email);
+                    
+                    //Atualiza a senha
+                    if (senha != '')
+                      await updatePassword(auth.currentUser, senha)
+                  }
+                  Alert.alert('Sucesso', 'Dados atualizados');
+            } catch(erro) {
+                  Alert.alert('Erro', 'Não foi possivel completar a operação. Motivo: ' + erro);
+            }
             
     }
 

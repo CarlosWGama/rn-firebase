@@ -1,14 +1,18 @@
-import { router } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Formik } from "formik";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Yup from 'yup';
-
+import { auth } from "../../config/firebase-config";
+import { router } from "expo-router";
 
 export default function CadastroScreen() {
 
     //Função do cadastro de usuário
     const handleCadastro = async({email, senha, nome, idade}:any) => {
-       
+        createUserWithEmailAndPassword(auth, email, senha)
+            .then(() => router.back())
+            .catch(erro => Alert.alert('Erro', 'Não foi possivel criar o usuário, tente novamente'))
+
     }
 
 
@@ -48,7 +52,6 @@ export default function CadastroScreen() {
 
                         {/* CADASTRAR */}
                         <Button title="Cadastrar" onPress={() => handleSubmit()} disabled={isSubmitting} />
-                        <Button title="Voltar" color="tomato" onPress={() => router.back()}  />
                     </View>
                 )}
             </Formik>

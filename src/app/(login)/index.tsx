@@ -1,11 +1,16 @@
 import { StyleSheet, View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
 import { Formik } from "formik";
 import { router } from "expo-router";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../config/firebase-config";
 
 export default function LoginScreen() {
     
     const handleLogin = async ({email, senha}:any) => {
 
+        await signInWithEmailAndPassword(auth, email, senha)
+            .then(usuario => router.replace('/home'))
+            .catch(erro => Alert.alert('Erro', 'Login ou senha incorreta!'));    
     }
 
     return (<View style={styles.container}>
