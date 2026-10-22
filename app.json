@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "firebase-novo",
-    "slug": "firebase-novo",
+    "name": "firebase",
+    "slug": "firebase",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

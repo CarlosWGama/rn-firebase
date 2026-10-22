@@ -1,12 +1,28 @@
-import { Text, View, Button, StyleSheet, TextInput, Alert } from "react-native";
-import { Formik } from "formik";
-import * as Yup from 'yup';
 import { router } from "expo-router";
+import { updateEmail, updatePassword } from "firebase/auth";
+import { Formik } from "formik";
+import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
+import * as Yup from 'yup';
+import { auth } from "../../config/firebase-config";
 
 export default function HomeScreen() {
 
     //Atualização de dados cadastrais. 
     const handleAtualizacaoCadastral = async({email, senha, nome, idade}:any) => {
+            try {
+                  if (auth.currentUser) {
+                    //Atualiza o email
+                    if(auth.currentUser.email != email) 
+                      await updateEmail(auth.currentUser, email);
+                    
+                    //Atualiza a senha
+                    if (senha != '')
+                      await updatePassword(auth.currentUser, senha)
+                  }
+                  Alert.alert('Sucesso', 'Dados atualizados');
+            } catch(erro) {
+                  Alert.alert('Erro', 'Não foi possivel completar a operação. Motivo: ' + erro);
+            }
             
     }
 
@@ -49,8 +65,9 @@ export default function HomeScreen() {
                         {/* CADASTRAR */}
                         <Button title="Cadastrar" onPress={() => handleSubmit()} disabled={isSubmitting} />
                         
-                        <Button title="Sair" color="tomato" onPress={() => {
-                            router.replace('/')
+                        <Button title="Sair" color="tomato" onPress={async () => {
+                            await auth.signOut();
+                            router.replace('/login')
                         }}/>
                     </View>
                 )}

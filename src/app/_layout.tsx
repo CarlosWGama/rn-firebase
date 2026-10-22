@@ -1,11 +1,12 @@
 import { Slot } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import { StatusBar } from "react-native";
+
 
 export default function RootLayour() {
     return (
         <>
             <Slot />
-            <StatusBar style="auto" />
+            <StatusBar backgroundColor="transparent" barStyle="dark-content" />
         </>
     )
 }
