@@ -1,60 +1,77 @@
 import { router } from "expo-router";
 import { updateEmail, updatePassword } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { Formik } from "formik";
+import { useEffect, useState } from "react";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Yup from 'yup';
-import { auth } from "../../config/firebase-config";
+import { auth, db } from "../../config/firebase-config";
 
 export default function HomeScreen() {
 
+    const [ usuario, setUsuario ] = useState({email: '', senha: '', nome: '', idade: ''});
     //Atualização de dados cadastrais. 
     const handleAtualizacaoCadastral = async({email, senha, nome, idade}:any) => {
-            try {
-                  if (auth.currentUser) {
-                    //Atualiza o email
-                    if(auth.currentUser.email != email) 
-                      await updateEmail(auth.currentUser, email);
-                    
-                    //Atualiza a senha
-                    if (senha != '')
-                      await updatePassword(auth.currentUser, senha)
-                  }
-                  Alert.alert('Sucesso', 'Dados atualizados');
-            } catch(erro) {
-                  Alert.alert('Erro', 'Não foi possivel completar a operação. Motivo: ' + erro);
-            }
+        try {
+            if (auth.currentUser) {
+            //Atualiza o email
+            if(auth.currentUser?.email != email) 
+                await updateEmail(auth.currentUser, email);
             
+            //Atualiza a senha
+            if (senha != '')
+                await updatePassword(auth.currentUser, senha)
+            //Atualizando dados
+            updateDoc(doc(db, 'usuarios', auth.currentUser.uid), {email, nome, idade})
+            }
+            Alert.alert('Sucesso', 'Dados atualizados');
+        } catch(erro) {
+            Alert.alert('Erro', 'Não foi possivel completar a operação. Motivo: ' + erro);       
+        }
     }
-
+    // ---------------------------------------
+    const buscarUsuario = async() => {
+        if (auth.currentUser) {
+            const snapshot = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+            const dados:any = snapshot.data();
+            setUsuario(dados);
+        }
+    }
+    // ---------------------------------------
+    useEffect(() => {
+        buscarUsuario();
+    }, []);
+    // ==============================================================
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Bem vindo! Esses são seus dados</Text>
 
             <Formik
-                initialValues={{email: '', senha: '', nome: '', idade: ''}}
+                initialValues={usuario}
                 onSubmit={handleAtualizacaoCadastral}
+                enableReinitialize={true}
                 validationSchema={Yup.object({
                     email: Yup.string().required('O campo email precisa existir').email('O campo precisa ser um email'),
                     nome: Yup.string().required('O campo nome precisa existir'),
                     idade: Yup.number().required('O campo idade precisa ser informado').positive('O valor precisa ser um número positivo'),
-                    senha: Yup.string().required('O campo senha precisa existir').min(6, 'O campo senha precisa ter no mínimo 6 caracteres')
+                    senha: Yup.string().min(6, 'O campo senha precisa ter no mínimo 6 caracteres')
                 })}
             >
-                {({handleChange, errors, touched, handleBlur, isSubmitting, handleSubmit}) => (
+                {({handleChange, errors, values, touched, handleBlur, isSubmitting, handleSubmit}) => (
                     <View style={{marginTop: 20}}>
                         {/* NOME */}
                         <Text>Nome: </Text>
-                        <TextInput onChangeText={handleChange('nome')} onBlur={handleBlur('nome')} style={styles.input}/>
+                        <TextInput onChangeText={handleChange('nome')} onBlur={handleBlur('nome')} style={styles.input} value={values.nome}/>
                         {touched.nome && errors.nome && <Text style={styles.erro}>{errors.nome}</Text>}
                         
                         {/* EMAIL */}
                         <Text>Email: </Text>
-                        <TextInput onChangeText={handleChange('email')} onBlur={handleBlur('email')} keyboardType="email-address" style={styles.input}/>
+                        <TextInput onChangeText={handleChange('email')} onBlur={handleBlur('email')} keyboardType="email-address" style={styles.input}  value={values.email}/>
                         {touched.email && errors.email && <Text style={styles.erro}>{errors.email}</Text>}
 
                         {/* Idade */}
                         <Text>Idade: </Text>
-                        <TextInput onChangeText={handleChange('idade')} onBlur={handleBlur('idade')} keyboardType="decimal-pad" style={styles.input}/>
+                        <TextInput onChangeText={handleChange('idade')} onBlur={handleBlur('idade')} keyboardType="decimal-pad" style={styles.input}  value={values.idade}/>
                         {touched.idade && errors.idade && <Text style={styles.erro}>{errors.idade}</Text>}
 
                         {/* Senha */}
@@ -62,12 +79,12 @@ export default function HomeScreen() {
                         <TextInput onChangeText={handleChange('senha')} onBlur={handleBlur('senha')} secureTextEntry style={styles.input}/>
                         {touched.senha && errors.senha && <Text style={styles.erro}>{errors.senha}</Text>}
 
-                        {/* CADASTRAR */}
-                        <Button title="Cadastrar" onPress={() => handleSubmit()} disabled={isSubmitting} />
+                        {/* Atualizar */}
+                        <Button title="Atualizar" onPress={() => handleSubmit()} disabled={isSubmitting} />
                         
                         <Button title="Sair" color="tomato" onPress={async () => {
                             await auth.signOut();
-                            router.replace('/login')
+                            router.replace('/')
                         }}/>
                     </View>
                 )}
